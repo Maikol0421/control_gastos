@@ -13,7 +13,7 @@ const AddMsiModal = ({ open, onClose, paymentTypes, onSave, initialData }) => {
   const [formData, setFormData] = useState(initialData);
 
   const [errors, setErrors] = useState({});
-
+  const [isLoading, setIsLoading] = useState(false);
   const months = [
     { label: "Enero", value: 1 },
     { label: "Febrero", value: 2 },
@@ -48,6 +48,7 @@ const AddMsiModal = ({ open, onClose, paymentTypes, onSave, initialData }) => {
   const handleSave = async () => {
     if (validateForm()) {
       try {
+        setIsLoading(true);
         const response = await fetch(
           `${import.meta.env.VITE_BACKEND_URL}/api/ctrl_gastos/create_msi`,
           {
@@ -65,6 +66,7 @@ const AddMsiModal = ({ open, onClose, paymentTypes, onSave, initialData }) => {
       } catch (error) {
         console.error("Error en la solicitud:", error);
       }
+      setIsLoading(false);
     }
   };
   useEffect(() => {
@@ -150,8 +152,8 @@ const AddMsiModal = ({ open, onClose, paymentTypes, onSave, initialData }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={handleSave}>
-          Guardar
+        <Button variant="contained" onClick={handleSave} disabled={isLoading}>
+          {isLoading ? "Guardando..." : "Guardar"}
         </Button>
       </DialogActions>
     </Dialog>

@@ -46,11 +46,13 @@ const ExpenseForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [createData, setCreateData] = useState(initialCreateData);
   const [msiData, setMsiData] = useState(initialMsiData);
-  const fetchData = async (filters = {
-    anio : currentYear,
-    mes : currentMonth,
-    type_date : true
-  }) => {
+  const fetchData = async (
+    filters = {
+      anio: currentYear,
+      mes: currentMonth,
+      type_date: true,
+    }
+  ) => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/ctrl_gastos/filter`,
