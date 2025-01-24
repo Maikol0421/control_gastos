@@ -32,9 +32,11 @@ import pdfIcon from "../images/pdf.png";
 import deleteIcon from "../images/delete.png";
 
 const ExpenseForm = () => {
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
   const [filters, setFilters] = useState({
-    anio: "2025",
-    mes: "",
+    anio: currentYear,
+    mes: currentMonth,
     fecha_inicial: "",
     fecha_final: "",
     tipo_pago: "",
@@ -62,6 +64,7 @@ const ExpenseForm = () => {
   };
   const [createData, setCreateData] = useState(initialCreateData);
   const [errors, setErrors] = useState(initialErrors);
+  const [isLoading, setIsLoading] = useState(false);
   const handleOpenCreateModal = () => {
     resetForm();
     setIsCreateModalOpen(true); // Abrir el modal
@@ -81,9 +84,6 @@ const ExpenseForm = () => {
       newErrors.descripcion = "La descripción es obligatoria.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0; // Devuelve true si no hay errores
-  };
-  const handleCloseCreateModal = () => {
-    setIsCreateModalOpen(false); // Cerrar el modal
   };
   useEffect(() => {
     fetchData();
@@ -142,6 +142,7 @@ const ExpenseForm = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
+          setIsLoading(true);
           const response = await fetch(
             `${import.meta.env.VITE_BACKEND_URL}/api/ctrl_gastos/delete`,
             {
@@ -152,16 +153,19 @@ const ExpenseForm = () => {
           );
           const result = await response.json();
           if (result.status === 200) {
-            Swal.fire(
-              "Eliminado",
-              "Registro eliminado exitosamente",
-              "success"
-            );
+            Swal.fire({
+              position: "top-center",
+              icon: "success",
+              title: "Eliminado exitosamente.",
+              showConfirmButton: false,
+              timer: 1200,
+            });
             fetchData();
           }
         } catch (error) {
           console.error("Error deleting data:", error);
         }
+        setIsLoading(false);
       }
     });
   };
@@ -230,6 +234,7 @@ const ExpenseForm = () => {
   const handleCreateSubmit = async () => {
     if (validateForm()) {
       try {
+        setIsLoading(true);
         const response = await fetch(
           `${import.meta.env.VITE_BACKEND_URL}/api/ctrl_gastos/create`,
           {
@@ -239,9 +244,15 @@ const ExpenseForm = () => {
           }
         );
         const result = await response.json();
-        console.log(result);
         if (result?.id) {
-          Swal.fire("Creado", "Registro creado exitosamente", "success");
+          // Swal.fire("Creado", "Registro creado exitosamente", "success");
+          Swal.fire({
+            position: "top-center",
+            icon: "success",
+            title: "Creado exitosamente.",
+            showConfirmButton: false,
+            timer: 1200,
+          });
           fetchData();
           resetForm();
           setIsCreateModalOpen(false);
@@ -249,6 +260,7 @@ const ExpenseForm = () => {
       } catch (error) {
         console.error("Error creating data:", error);
       }
+      setIsLoading(false);
     }
   };
 
@@ -308,13 +320,46 @@ const ExpenseForm = () => {
                 }
                 sx={{ marginBottom: "1rem" }}
               />
-              <Autocomplete
+              {/* <Autocomplete
                 options={["Enero", "Febrero", "Marzo"]}
                 renderInput={(params) => <TextField {...params} label="Mes" />}
                 value={filters.mes}
                 onChange={(_, value) =>
                   setFilters((prev) => ({ ...prev, mes: value }))
                 }
+                sx={{ marginBottom: "1rem" }}
+              /> */}
+              <Autocomplete
+                options={[
+                  { label: "Enero", value: 1 },
+                  { label: "Febrero", value: 2 },
+                  { label: "Marzo", value: 3 },
+                  { label: "Abril", value: 4 },
+                  { label: "Mayo", value: 5 },
+                  { label: "Junio", value: 6 },
+                  { label: "Julio", value: 7 },
+                  { label: "Agosto", value: 8 },
+                  { label: "Septiembre", value: 9 },
+                  { label: "Octubre", value: 10 },
+                  { label: "Noviembre", value: 11 },
+                  { label: "Diciembre", value: 12 },
+                ]}
+                getOptionLabel={(option) => option.label} // Asegura que siempre haya un label para mostrar
+                renderInput={(params) => <TextField {...params} label="Mes" />}
+                value={
+                  filters.mes
+                    ? filters.mes?.label // Usa directamente el valor seleccionado del estado
+                    : null // Muestra un valor nulo si no hay selección
+                }
+                onChange={(_, newValue) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    mes: newValue ? newValue?.value : null, // Guarda la opción completa seleccionada
+                  }))
+                }
+                isOptionEqualToValue={(option, value) =>
+                  option.value === value?.value
+                } // Compara correctamente la opción con el valor seleccionado
                 sx={{ marginBottom: "1rem" }}
               />
             </>
@@ -405,7 +450,15 @@ const ExpenseForm = () => {
       >
         Agregar Registro
       </Button>
-
+      <Box>
+        <Button
+          variant="contained"
+          style={{ marginBottom: "20px" }}
+          onClick={handleOpenCreateModal}
+        >
+          Agregar MSI
+        </Button>
+      </Box>
       {/* Modal de Creación */}
       <Dialog
         open={isCreateModalOpen}
@@ -478,8 +531,12 @@ const ExpenseForm = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setIsCreateModalOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={handleCreateSubmit}>
-            Guardar
+          <Button
+            variant="contained"
+            onClick={handleCreateSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? "Guardando..." : "Guardar"}
           </Button>
         </DialogActions>
       </Dialog>
